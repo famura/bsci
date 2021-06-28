@@ -8,7 +8,7 @@ def compute_interval(
     data: np.ndarray,
     stat_fcn: Callable,
     num_reps: int,
-    alpha: float,
+    conf_lvl: float,
     ci_sides: int,
     bias_correction: bool = False,
     studentized: bool = False,
@@ -31,7 +31,7 @@ def compute_interval(
     :param data: data to bootstrap from (for now only 1D arrays supported)
     :param stat_fcn: function to compute a statistic of interest (e.g. mean, variance) on bootstrap samples
     :param num_reps: number of samples in every bootstrap sample
-    :param alpha: determines the confidence level $1 - \alpha \in [0, 1]$
+    :param conf_lvl: determines the confidence level $\alpha = 1 - confidence \in [0, 1]$
     :param ci_sides: one or two-sided confidence interval
     :param bias_correction: bool to decide if the bias should be subtracted (see [2]). However, the confidence intervals
         are constructed independent of the bias-correction (see [5, p.7]). The bias-correction can be dangerous in
@@ -45,7 +45,8 @@ def compute_interval(
     assert isinstance(data, np.ndarray), "The data container must be a numpy array!"
     assert data.ndim < 3, "Only 1-dim and 2-dim data is supported!"
     assert callable(stat_fcn), "The statistic of interest must be a callable with an argument called `axis`!"
-    assert isinstance(alpha, (int, float)), "The quantile alpha is expected to be an int or float!"
+    assert isinstance(conf_lvl, (int, float)), "The quantile conf_lvl is expected to be an int or float!"
+    assert 0 < conf_lvl < 1, " the "
     assert isinstance(num_reps, int) and num_reps > 0, "The number of bootstrap samples must be an int greater 0!"
     assert ci_sides == 1 or ci_sides == 2, "The number of CI sides must be 1 or 2!"
 
@@ -116,12 +117,12 @@ def compute_interval(
         t_bs = delta_bs / se_bs  # is consistent with [3, p. 360]
 
         t_bs.sort()
-        # Two-sided confidence interval
         if ci_sides == 2:
-            t_lo, t_up = np.percentile(t_bs, 100 * np.array([alpha / 2, 1 - alpha / 2]), axis=1)
-        # One-sided confidence interval  (lower and upper bound as if there would only be one of them)
+            # Two-sided confidence interval
+            t_lo, t_up = np.percentile(t_bs, 100 * np.array([(1 - conf_lvl) / 2, 1 - (1 - conf_lvl) / 2]), axis=1)
         else:
-            t_lo, t_up = np.percentile(t_bs, 100 * np.array([alpha, 1 - alpha]), axis=1)
+            # One-sided confidence interval  (lower and upper bound as if there would only be one of them)
+            t_lo, t_up = np.percentile(t_bs, 100 * np.array([1 - conf_lvl, conf_lvl]), axis=1)
 
         ci_lo = stat_emp - t_up * se_emp  # see [3, (11.6) p. 364]
         ci_up = stat_emp - t_lo * se_emp  # see [3, (11.6) p. 364]
@@ -129,12 +130,14 @@ def compute_interval(
     # Confidence interval without asymptotic refinement (a.k.a. basic method)
     else:
         delta_bs.sort()
-        # Two-sided confidence interval
         if ci_sides == 2:
-            delta_lo, delta_up = np.percentile(delta_bs, 100 * np.array([alpha / 2, 1 - alpha / 2]), axis=1)
-        # One-sided confidence interval (lower and upper bound as if there would only be one of them)
+            # Two-sided confidence interval
+            delta_lo, delta_up = np.percentile(
+                delta_bs, 100 * np.array([(1 - conf_lvl) / 2, 1 - (1 - conf_lvl) / 2]), axis=1
+            )
         else:
-            delta_lo, delta_up = np.percentile(delta_bs, 100 * np.array([alpha, 1 - alpha]), axis=1)
+            # One-sided confidence interval (lower and upper bound as if there would only be one of them)
+            delta_lo, delta_up = np.percentile(delta_bs, 100 * np.array([1 - conf_lvl, conf_lvl]), axis=1)
 
         ci_lo = stat_emp - delta_up
         ci_up = stat_emp - delta_lo

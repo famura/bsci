@@ -23,7 +23,7 @@ if __name__ == "__main__":
     mean, std = 2, 3
     num_samples = 40
     num_bs_repetitions = [100, 1000]
-    alphas = [0.05, 0.1]
+    conv_lvls = [0.9, 0.95]
     data = mean + std * np.random.randn(num_samples)
 
     for num_reps in num_bs_repetitions:
@@ -31,10 +31,16 @@ if __name__ == "__main__":
         num_rows, num_cols = 2, 2
         fig, axs = plt.subplots(num_rows, num_cols, figsize=(12, 10))
 
-        for idx, (alpha, bias_correction) in enumerate(itertools.product(alphas, (True, False))):
+        for idx, (conv_lvl, bias_correction) in enumerate(itertools.product(conv_lvls, (True, False))):
             stat_emp = stat_fcn(data)
             stat_ret, ci_lo, ci_up = compute_interval(
-                data, stat_fcn, num_reps=num_reps, alpha=alpha, ci_sides=2, bias_correction=bias_correction, seed=0
+                data,
+                stat_fcn,
+                num_reps=num_reps,
+                conf_lvl=conv_lvl,
+                ci_sides=2,
+                bias_correction=bias_correction,
+                seed=0,
             )
 
             n, bins, patches = axs[idx // num_cols, idx % num_cols].hist(
@@ -50,7 +56,7 @@ if __name__ == "__main__":
             plt.get_current_fig_manager().canvas.manager.set_window_title(
                 f"{num_samples} data samples, {num_reps} bootstrap repetitions"
             )
-            axs[idx // num_cols, idx % num_cols].set_title(f"alpha {alpha}, bias_correction {bias_correction}")
+            axs[idx // num_cols, idx % num_cols].set_title(f"confidence {conv_lvl}, bias_correction {bias_correction}")
             axs[idx // num_cols, idx % num_cols].legend()
 
     plt.show()

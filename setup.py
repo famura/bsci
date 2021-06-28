@@ -7,7 +7,7 @@ here = pathlib.Path(__file__).parent.resolve()
 setup(
     # This is the name of your project as to be published at PyPI: https://pypi.org/project/sampleproject/
     name="bsci",  # https://packaging.python.org/specifications/core-metadata/#name
-    version="1.0",  # https://www.python.org/dev/peps/pep-0440/
+    version="1.1",  # https://www.python.org/dev/peps/pep-0440/
     description="Constructing frequentist confidence intervals using the statistical bootstrap",
     long_description=(here / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
@@ -31,7 +31,7 @@ setup(
     ],
     # List additional groups of dependencies, installed via `pip install -e .[dev]`
     extras_require={
-        "dev": ["black", "isort", "matplotlib", "pytest", "pytest-cov"],
+        "dev": ["black", "isort", "matplotlib", "pytest", "pytest-cov", "scipy"],
     },
     project_urls={
         "Source": "https://github.com/famura/bsci",
